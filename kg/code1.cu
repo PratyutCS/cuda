@@ -297,20 +297,22 @@ __device__ uint32_t* multiply(uint32_t* num1, uint32_t* num2, size_t s1, size_t 
 
     *res = s_sum2;
 
-    // free(p_num1);
-    // free(p_num2);
-    // free(a);
-    // free(b);
-    // free(c);
-    // free(d);
-    // free(ac);
-    // free(bd);
-    // free(a_plus_b);
-    // free(c_plus_d);
-    // free(a_plus_b_times_c_plus_d);
-    // free(diff1);
-    // free(diff2);
-    // free(sum1);
+    free(p_num1);
+    free(p_num2);
+    free(a);
+    free(b);
+    free(c);
+    free(d);
+    free(ac);
+    free(bd);
+    free(a_plus_b);
+    free(c_plus_d);
+    free(a_plus_b_times_c_plus_d);
+    free(diff1);
+    free(diff2);
+    free(sum1);
+    free(shifted_ac);
+    free(shifted_diff2);
     return sum2;
 }
 
@@ -318,21 +320,21 @@ __global__ void kernel(uint32_t* num1, uint32_t* num2, size_t s1, size_t s2, uin
     size_t s_res;
     uint32_t* final = multiply(num1, num2, s1, s2, &s_res);
 
-    printf("final mul as hex (GPU):\n");
-    for (size_t i = 0; i < s_res; i++) {
-        printf("%08x ", final[i]);
-    }
-    printf("\n");
+    // printf("final mul as hex (GPU):\n");
+    // for (size_t i = 0; i < s_res; i++) {
+    //     printf("%08x ", final[i]);
+    // }
+    // printf("\n");
 
-    printf("final mul as decimal (GPU):\n");
-    for (size_t i = 0; i < s_res; i++) {
-        printf("%u ",final[i]);
-    }
-    printf("\n");
+    // printf("final mul as decimal (GPU):\n");
+    // for (size_t i = 0; i < s_res; i++) {
+    //     printf("%u ",final[i]);
+    // }
+    // printf("\n");
 
-    if(s_res > (s1+s2)){
-        printf("greater than expected size diff of : %lu\n", (unsigned long)(s_res-(s1+s2)));
-    }
+    // if(s_res > (s1+s2)){
+    //     printf("greater than expected size diff of : %lu\n", (unsigned long)(s_res-(s1+s2)));
+    // }
     for(int i=0; i<(s1+s2); i++){
         d_result[(s1+s2) -1 -i] = (i<s_res) ? final[s_res-1-i] : 0 ;
     }
@@ -410,7 +412,7 @@ bool compare_strings(char *str1, char *str2) {
 int main() {
     srand((unsigned int)time(NULL));
 
-    for (int i = 95; i <= 95; i++) {
+    for (int i = 1; i <= 1000; i++) {
         printf("========== TEST %d ==========\n", i);
         // Generate host strings
         char* num1 = gen(i);
@@ -419,8 +421,8 @@ int main() {
             fprintf(stderr, "Memory allocation failure\n");
             exit(EXIT_FAILURE);
         }
-        printf("num1: %s\n", num1);
-        printf("num2: %s\n", num2);
+        // printf("num1: %s\n", num1);
+        // printf("num2: %s\n", num2);
 
         // Calculate sizes (number of uint32_t words required)
         size_t s1 = ((strlen(num1) * 4) + 31) / 32;
@@ -430,9 +432,9 @@ int main() {
         mpz_init(g_num1);
         mpz_init(g_num2);
         mpz_set_str(g_num1, num1, 16);
-        gmp_printf("g_num1: %Zx\n", g_num1);
+        // gmp_printf("g_num1: %Zx\n", g_num1);
         mpz_set_str(g_num2, num2, 16);
-        gmp_printf("g_num2: %Zx\n", g_num2);
+        // gmp_printf("g_num2: %Zx\n", g_num2);
 
         uint32_t *h_num1 = (uint32_t*) malloc(s1 * sizeof(uint32_t));
         uint32_t *h_num2 = (uint32_t*) malloc(s2 * sizeof(uint32_t));
@@ -483,25 +485,25 @@ int main() {
         free(h_num1);
         free(h_num2);
 
-        printf("final mul as hex (CPU):\n");
-        for (size_t i = 0; i < (s1+s2); i++) {
-            printf("%08x ", h_result[i]);
-        }
-        printf("\n");
+        // printf("final mul as hex (CPU):\n");
+        // for (size_t i = 0; i < (s1+s2); i++) {
+        //     printf("%08x ", h_result[i]);
+        // }
+        // printf("\n");
 
-        printf("final mul as decimal (CPU):\n");
-        for (size_t i = 0; i < (s1+s2); i++) {
-            printf("%u ",h_result[i]);
-        }
-        printf("\n");
+        // printf("final mul as decimal (CPU):\n");
+        // for (size_t i = 0; i < (s1+s2); i++) {
+        //     printf("%u ",h_result[i]);
+        // }
+        // printf("\n");
 
         char* hex_result = uint32_array_to_hex(h_result, (s1+s2));
-        printf("hexa converted in (cpu) is: %s\n",hex_result);
+        // printf("hexa converted in (cpu) is: %s\n",hex_result);
 
         mpz_t g_mul;
         mpz_init(g_mul);
         mpz_mul(g_mul, g_num1, g_num2);
-        gmp_printf("mpz multiplucation result is: %Zx\n", g_mul);
+        // gmp_printf("mpz multiplucation result is: %Zx\n", g_mul);
         char* gmp_hex_result = mpz_get_str(NULL, 16, g_mul);
 
         if (compare_strings(hex_result, gmp_hex_result)) {
@@ -514,6 +516,9 @@ int main() {
         mpz_clear(g_mul);
         mpz_clear(g_num1);
         mpz_clear(g_num2);
+        free(h_result);
+        free(hex_result);
+        free(gmp_hex_result);
     }
     return 0;
 }
